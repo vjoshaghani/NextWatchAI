@@ -1,0 +1,56 @@
+﻿@using NextWatchAI.Models
+@{
+    ViewData["Title"] = "AI Movie Recommendation";
+
+    var aiResult = ViewData["AiResult"] as AiRecommendationResult;
+    var movie = ViewData["Movie"] as MovieVM;
+}
+
+<div class="container my-4">
+    <h1 class="mb-4">🎬 Discover a Movie With AI</h1>
+
+    <form asp-action="Ask" method="post" class="mb-4">
+        <div class="input-group">
+            <input type="text" name="mood" class="form-control" placeholder="What kind of movie are you in the mood for?" required />
+            <button type="submit" class="btn btn-primary">Ask AI</button>
+        </div>
+    </form>
+
+    @if (aiResult != null && movie != null)
+    {
+        <div class="card shadow border-0 mb-5">
+            <div class="row g-0">
+                <div class="col-md-5">
+                    @if (!string.IsNullOrEmpty(movie.PosterUrl))
+                    {
+                        <img src="@movie.PosterUrl" class="img-fluid rounded-start w-100 h-100" style="object-fit: cover;" alt="@movie.Title poster" />
+                    }
+                    else
+                    {
+                        <div class="d-flex align-items-center justify-content-center bg-light border rounded-start" 
+                             style="height: 100%; font-size: 0.9rem; color: #888;">
+                            No Image
+                        </div>
+                    }
+                </div>
+                <div class="col-md-7">
+                    <div class="card-body">
+                        <h3 class="card-title fw-bold">@movie.Title</h3>
+                        <p class="text-muted fst-italic">🤖 @aiResult.Reasoning</p>
+                        <p>@(string.IsNullOrWhiteSpace(movie.Overview) ? "No description available." : movie.Overview)</p>
+
+                        <form asp-controller="Home" asp-action="Search" method="get">
+                            <input type="hidden" name="query" value="@movie.Title" />
+                            <button type="submit" class="btn btn-primary">🔍 Search This Movie</button>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+</div>

@@ -1,0 +1,179 @@
+﻿@model List<NextWatchAI.Models.MovieVM>
+
+@{
+    ViewData["Title"] = "Discover Movies";
+    var currentPage = ViewData["CurrentPage"] as int? ?? 1;
+    var totalPages = ViewData["TotalPages"] as int? ?? int.MaxValue;
+    var searchQuery = ViewData["SearchQuery"] as string;
+    var favoriteIds = ViewData["FavoriteIds"] as HashSet<int> ?? new HashSet<int>();
+}
+
+@functions {
+    string GetPaginationUrl(string? searchQuery, int page)
+    {
+        if (!string.IsNullOrEmpty(searchQuery))
+        {
+            return Url.Action("Search", new { query = searchQuery, page = page }) ?? "#";
+        }
+        else
+        {
+            return Url.Action("Index", new { page = page }) ?? "#";
+        }
+    }
+}
+
+<div class="container my-4">
+    @if (ViewData["SearchQuery"] != null)
+    {
+        <h1 class="mb-4">Search Results for "@ViewData["SearchQuery"]"</h1>
+    }
+    else
+    {
+        <h1 class="mb-4">Discover Popular Movies</h1>
+    }
+
+    @if (TempData["Message"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Message"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    else if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <form class="mb-4" method="get" asp-controller="Home" asp-action="Search">
+        <div class="input-group">
+            <input type="text" name="query" class="form-control" placeholder="Search movies..."
+                   value="@(ViewData["SearchQuery"] as string ?? string.Empty)" required />
+            <button type="submit" class="btn btn-primary">Search</button>
+        </div>
+    </form>
+
+    @if (ViewData["SearchQuery"] != null)
+    {
+        <a href="@Url.Action("Index", "Home")" class="btn btn-outline-secondary mb-3">
+            Back to Popular Movies
+        </a>
+    }
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Poster</th>
+                        <th>Title</th>
+                        <th>Overview</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var movie in Model)
+                    {
+                        <tr>
+                            <td style="width: 120px;">
+                                @if (!string.IsNullOrEmpty(movie.PosterUrl))
+                                {
+                                    <img src="@movie.PosterUrl" alt="Poster" class="img-fluid rounded"
+                                         style="width: 100px; height: 150px; object-fit: cover;" />
+                                }
+                                else
+                                {
+                                    <div class="d-flex align-items-center justify-content-center bg-light border rounded"
+                                         style="width: 100px; height: 150px; font-size: 0.8rem; color: #888;">
+                                        No Image
+                                    </div>
+                                }
+                            </td>
+                            <td class="fw-bold">@movie.Title</td>
+                            <td>
+                                @(string.IsNullOrEmpty(movie.Overview)
+                                    ? "No description available."
+                                    : (movie.Overview.Length > 300 ? movie.Overview.Substring(0, 300) + "..." : movie.Overview))
+                            </td>
+                            <td>
+                                @if (User.Identity != null && User.Identity.IsAuthenticated)
+                                {
+                                    if (favoriteIds.Contains(movie.Id))
+                                    {
+                                        <button class="btn btn-sm btn-outline-secondary" disabled>✔ Added</button>
+                                    }
+                                    else
+                                    {
+                                        <form asp-controller="Home" asp-action="AddToFavorites" method="post">
+                                            <input type="hidden" name="movieId" value="@movie.Id" />
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-success">Add to Favorites</button>
+                                        </form>
+                                    }
+                                }
+                                else
+                                {
+                                    <a class="btn btn-sm btn-outline-warning"
+                                       href="@Url.Page("/Account/Login", new { area = "Identity", returnUrl = Context.Request.Path })"
+                                       title="Login to save favorites">
+                                        Login to Add to Favorites
+                                    </a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="d-flex justify-content-between mt-4">
+            @if (currentPage > 1)
+            {
+                <a class="btn btn-outline-primary" href="@GetPaginationUrl(searchQuery, currentPage - 1)">
+                    Previous
+                </a>
+            }
+            else
+            {
+                <button class="btn btn-outline-primary" disabled>Previous</button>
+            }
+
+            <div class="fw-bold">Page @currentPage</div>
+
+            @if (currentPage < totalPages)
+            {
+                <a class="btn btn-outline-primary" href="@GetPaginationUrl(searchQuery, currentPage + 1)">
+                    Next
+                </a>
+            }
+            else
+            {
+                <button class="btn btn-outline-primary" disabled>Next</button>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center my-5">
+            <h4 class="text-muted">No movies found.</h4>
+            @if (ViewData["SearchQuery"] != null)
+            {
+                <p class="text-muted">Try searching for something else.</p>
+            }
+            else
+            {
+                <p class="text-muted">There are currently no movies available.</p>
+            }
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(ViewData["AIReasoning"] as string))
+    {
+        <div class="alert alert-info">
+            🤖 AI Reasoning: "@ViewData["AIReasoning"]"
+        </div>
+    }
+</div>

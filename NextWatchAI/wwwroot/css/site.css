@@ -1,0 +1,64 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
+  color: var(--bs-secondary-color);
+  text-align: end;
+}
+
+.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
+  text-align: start;
+}
+
+
+/* Keep the nice blue border and smooth color transitions */
+.navbar {
+  border-bottom: 2px solid #0d6efd;
+}
+
+.navbar-brand,
+.nav-link {
+  transition: color 0.3s;
+}
+
+.navbar-brand:hover,
+.nav-link:hover {
+  color: #0d6efd !important;
+}
+
+/* Make sure nav items wrap instead of overlapping */
+.navbar-collapse {
+  flex-wrap: wrap;
+}
+
+/* Tighten up padding on links for smaller viewports */
+.navbar-nav .nav-link {
+  padding: 0.5rem 0.75rem;
+}
+
+/* Add a bit of breathing room when links wrap */
+@media (max-width: 767.98px) {
+  .navbar-nav {
+    margin-bottom: 0.5rem;
+  }
+}

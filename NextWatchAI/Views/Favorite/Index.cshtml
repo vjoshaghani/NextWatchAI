@@ -1,0 +1,139 @@
+﻿@model List<NextWatchAI.Models.FavoriteMovieVM>
+@{
+    ViewData["Title"] = "My Favorites";
+}
+
+<div class="container my-4">
+    <h1 class="mb-4">My Favorite Movies</h1>
+
+    @if (TempData["Message"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Message"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    else if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Poster</th>
+                        <th>Title</th>
+                        <th>Overview</th>
+                        <th>Note</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var fav in Model)
+                    {
+                        <tr>
+                            <td style="width: 120px;">
+                                @if (!string.IsNullOrEmpty(fav.PosterUrl))
+                                {
+                                    <img src="@fav.PosterUrl" alt="Poster" class="img-fluid rounded"
+                                         style="width: 100px; height: 150px; object-fit: cover;" />
+                                }
+                                else
+                                {
+                                    <div class="d-flex align-items-center justify-content-center bg-light border rounded"
+                                         style="width: 100px; height: 150px; font-size: 0.8rem; color: #888;">
+                                        No Image
+                                    </div>
+                                }
+                            </td>
+                            <td class="fw-bold">@fav.Title</td>
+                            <td>
+                                @(string.IsNullOrEmpty(fav.Overview)
+                                    ? "No description available."
+                                    : (fav.Overview.Length > 300 ? fav.Overview.Substring(0, 300) + "..." : fav.Overview))
+                            </td>
+                            <td style="min-width: 200px;">
+                                @if (!string.IsNullOrEmpty(fav.Note))
+                                {
+                                    <div class="text-muted small" style="white-space: pre-wrap;">@fav.Note</div>
+                                }
+                                else
+                                {
+                                    <span class="text-secondary fst-italic">No note yet</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="d-flex flex-column gap-2">
+                                    <button class="btn btn-sm btn-outline-primary w-100" data-bs-toggle="modal"
+                                            data-bs-target="#noteModal" data-favid="@fav.FavoriteId"
+                                            data-title="@fav.Title" data-note="@fav.Note">
+                                        Edit Note
+                                    </button>
+                                    <form asp-controller="Favorite"
+                                        asp-action="Delete"
+                                        method="post"
+                                        asp-route-tmdbId="@fav.Id"
+                                        asp-route-returnUrl="@Url.Action("Index", "Favorite")">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-danger w-100">Remove</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="text-center text-muted my-5">
+            <h4>No favorites yet.</h4>
+            <p>Start exploring and add movies to your favorites!</p>
+        </div>
+    }
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="noteModal" tabindex="-1" aria-labelledby="noteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form asp-controller="Favorite" asp-action="EditNote" method="post" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="noteModalLabel">Edit Note</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="favIdInput" name="id" />
+                <div class="mb-3">
+                    <label for="noteText" class="form-label">Your Note</label>
+                    <textarea class="form-control" id="noteText" name="note" rows="4" ></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Save Note</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const noteModal = document.getElementById('noteModal');
+        noteModal.addEventListener('show.bs.modal', event => {
+            const button = event.relatedTarget;
+            const favId = button.getAttribute('data-favid');
+            const title = button.getAttribute('data-title');
+            const note = button.getAttribute('data-note') || "";
+
+            noteModal.querySelector('#favIdInput').value = favId;
+            noteModal.querySelector('#noteText').value = note;
+            noteModal.querySelector('#noteModalLabel').textContent = `Edit Note for "${title}"`;
+        });
+    </script>
+}
